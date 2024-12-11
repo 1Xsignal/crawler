@@ -9,7 +9,7 @@ from filters.crypto_signals_filters import parse_message
 
 channels_dict=get_chanell_of_telegram(Session.session_name,Session.api_id,Session.api_hash)
 print(f'your channels:\n{channels_dict}')
-channels = [id for id in  channels_dict.values()]  # جایگزین کنید با یوزرنیم یا ID کانال‌ها
+channels = [id for id in  channels_dict.values()]
 
 
 
