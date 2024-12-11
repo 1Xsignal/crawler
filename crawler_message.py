@@ -3,6 +3,7 @@ from telethon import events
 import asyncio
 from session import Session
 from crawler_channel import get_chanell_of_telegram
+from filters.crypto_signals_filters import parse_message
 
 
 
@@ -24,6 +25,10 @@ async def handle_new_message(event):
 
     print(f"New message in {channel_name}:\n{message_text}")
     print(f"Sender: {sender.username if sender else 'Unknown'}\n")
+    if channel_name == 'test_bot':
+        print(parse_message(message_text))
+
+
 
 
 
