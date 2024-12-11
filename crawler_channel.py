@@ -1,5 +1,7 @@
 from telethon.sync import TelegramClient
 from session import Session
+import asyncio
+
 
 
 def get_chanell_of_telegram(session_name, api_id, api_hash):
@@ -19,6 +21,5 @@ def get_chanell_of_telegram(session_name, api_id, api_hash):
         return channel_dict
 
 
-print(get_chanell_of_telegram(Session.session_name,Session.api_id,Session.api_hash))
 
 
