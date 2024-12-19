@@ -26,7 +26,7 @@ async def handle_new_message(event):
     print(f"New message in {channel_name}:\n{message_text}")
     print(f"Sender: {sender.username if sender else 'Unknown'}\n")
     if channel_name == 'test_bot':
-        print(parse_message_learn2TradeCrypto(message_text))
+        print(parse_message_alt_signal_spot(message_text))
 
 
 

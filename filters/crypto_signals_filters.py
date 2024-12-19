@@ -74,3 +74,107 @@ def parse_message_learn2TradeCrypto(msg):
     return data
 
 
+def parse_message_learn2trade(message):
+    patterns = {
+        "pair_and_side": r"^(\w+)\.([A-Z]+)\s+(SHORT|LONG)",
+        "leverage": r"Leverage: (\w+ \d+x)",
+        "entry": r"Entry: ([\d\.]+)",
+        "take_profits": r"Take profit \d+: ([\d\.]+) \(Success rate: (\d+%)\)",
+        "stop_loss": r"Stop loss: ([\d\.]+)",
+        "trailing_config": r"Trailing Configuration: Stop: (\w+) - Trigger: Target \((\d+)\)"
+    }
+
+    result = {}
+
+    # Extract pair, type, and side (Short/Long)
+    pair_and_side_match = re.search(patterns["pair_and_side"], message)
+    if pair_and_side_match:
+        result["pair"] = pair_and_side_match.group(1)
+        result["type"] = pair_and_side_match.group(2)
+        result["side"] = pair_and_side_match.group(3)
+
+    # Extract leverage
+    leverage_match = re.search(patterns["leverage"], message)
+    if leverage_match:
+        result["leverage"] = leverage_match.group(1)
+
+    # Extract entry
+    entry_match = re.search(patterns["entry"], message)
+    if entry_match:
+        result["entry"] = float(entry_match.group(1))
+
+    # Extract take profits and success rates
+    take_profits = []
+    for tp_match in re.finditer(patterns["take_profits"], message):
+        take_profits.append({
+            "price": float(tp_match.group(1)),
+            "success_rate": tp_match.group(2)
+        })
+    result["take_profits"] = take_profits
+
+    # Extract stop loss
+    stop_loss_match = re.search(patterns["stop_loss"], message)
+    if stop_loss_match:
+        result["stop_loss"] = float(stop_loss_match.group(1))
+
+    # Extract trailing configuration
+    trailing_match = re.search(patterns["trailing_config"], message)
+    if trailing_match:
+        result["trailing_configuration"] = {
+            "stop": trailing_match.group(1),
+            "trigger_target": int(trailing_match.group(2))
+        }
+
+    return result
+
+
+def parse_message_alt_signal_spot(message):
+
+    if 'Targets:' in message:
+        # الگوها برای شناسایی بخش‌های مختلف
+        patterns = {
+            "currency": r"#(\w+)",
+            "entry": r"Entry:\s([\d\.]+\s-\s[\d\.]+)",
+            "targets": r"Targets:\s([\d\.\s\-\n]+)",
+            "stoploss": r"Stoploss:\s([\d\.]+)"
+        }
+
+        # استخراج اطلاعات
+        details = {}
+        for key, pattern in patterns.items():
+            match = re.search(pattern, message)
+            if match:
+                details[key] = match.group(1).strip()
+
+        # پردازش اهداف برای جداسازی
+        if "targets" in details:
+            details["targets"] = [float(target) for target in details["targets"].split("-")]
+
+        return details
+    else:
+        patterns = {
+            "currency": r"#(\w+/\w+)",  # استخراج نماد
+            "profit": r"Profit:\s([\d\.]+)%",  # استخراج سود
+            "loss": r"Loss:\s([\d\.]+)%",  # استخراج ضرر
+            "average_entry_price": r"Average Entry Price:\s([\d\.]+)",  # استخراج قیمت ورود
+            "period": r"Period:\s(.+)",  # استخراج دوره زمانی
+            "status": r"(Take-Profit target \d+|All entry targets achieved|Stop Target Hit)"  # وضعیت پیام
+        }
+
+        details = {"exchanges": []}
+        # استخراج صرافی‌ها
+        exchanges_match = re.search(r"^(.*)\n", message)
+        if exchanges_match:
+            details["exchanges"] = [ex.strip() for ex in exchanges_match.group(1).split(",")]
+
+        # استخراج داده‌های مختلف
+        for key, pattern in patterns.items():
+            match = re.search(pattern, message)
+            if match:
+                details[key] = match.group(1).strip()
+
+        return details
+
+
+
+
