@@ -5,13 +5,17 @@ from crawler_channel import get_chanell_of_telegram
 from filters.crypto_signals_filters import *
 import datetime
 from model import Currency, ChannelOfTelegram, SignalTable
+import os
 
 channels_dict = get_chanell_of_telegram(Session.session_name, Session.api_id, Session.api_hash)
 # print(f'your channels:\n{channels_dict}')
 channels = [id for id in channels_dict.values()]
-
+media_folder='media'
 for channel in channels_dict.items():
-    ch = ChannelOfTelegram.insert(telegram_unique_id=channel[1], user_name=channel[0])
+    path=channel[0]+'.jpg'
+    logo_path=os.path.join(media_folder,path)
+
+    ch = ChannelOfTelegram.insert(telegram_unique_id=channel[1], user_name=channel[0],logo=logo_path)
     if ch:
         print(f'channel{ch.telegram_unique_id} added')
     print(channel)
@@ -128,6 +132,47 @@ async def handle_new_message(event):
             pass
         case 1200559110:
             # 'CoinCodeCap Spot Signals 🔐'
+            val = parse_message_CoinCodeSpot(message_text)
+            if val:
+                print(val)
+                if val.get('Type') == 'Trade Signal':
+                    value = val.get('Details')
+                    print(value)
+                    currency = Currency.insert(title=value.get("Pair"))
+                    signl = SignalTable.insert(cur_title=value.get('Pair'),
+                                               channel_id=channel_id,
+                                               entry_zone=str(value.get('Entry Targets')),
+                                               leverage=None,
+                                               targets=str(value.get("Take Profit Targets")),
+                                               short_or_long=value.get('Type'),
+                                               stoploss=value.get('stop_loss'),
+                                               profit=None,
+                                               period_time=None, )
+                elif val.get('Type') == 'Profit Report':
+                    value = val.get('Details')
+                    currency = Currency.insert(title=value.get("Pair"))
+                    signl = SignalTable.insert(cur_title=value.get('Pair'),
+                                               channel_id=channel_id,
+                                               entry_zone=None,
+                                               leverage=None,
+                                               targets=None,
+                                               short_or_long=None,
+                                               stoploss=None,
+                                               profit=value.get('Profit'),
+                                               period_time=value.get('Period'), )
+
+                elif val.get('Type') == 'Entry Report':
+                    value = val.get('Details')
+                    currency = Currency.insert(title=value.get("Pair"))
+                    signl = SignalTable.insert(cur_title=value.get('Pair'),
+                                               channel_id=channel_id,
+                                               entry_zone=f'entry confirmed:{value.get("Entry Confirmed")} and average entry price:{value.get("Average Entry Price")}',
+                                               leverage=None,
+                                               targets=None,
+                                               short_or_long=None,
+                                               stoploss=None,
+                                               profit=None,
+                                               period_time=None, )
             pass
         case 1544474547:
             # 'CoinCodeCap High Leverage (High risk) Trades 🔐'
